@@ -1,2 +1,28 @@
-
+# Claude Code設定
 .claude
+
+# Pythonバイトコードキャッシュ
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 仮想環境
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 出力ファイル（プロジェクト固有）
+output/
+
+# OSファイル
+.DS_Store
+Thumbs.db

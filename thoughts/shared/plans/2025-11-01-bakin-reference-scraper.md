@@ -368,9 +368,9 @@ logging.basicConfig(
 ### 成功基準
 
 #### 自動検証:
-- [ ] Pythonファイルが構文エラーなくインポートできる: `python -c "from src.scraper import BakinScraper"`
-- [ ] 設定ファイルが正しく読み込める: `python -c "from src.scraper import BakinScraper; s = BakinScraper(); print(s.base_url)"`
-- [ ] annotated.htmlが取得できる: `python -c "from src.scraper import BakinScraper; s = BakinScraper(); soup = s.fetch_annotated_page(); print(soup.title.text if soup else 'Failed')"`
+- [x] Pythonファイルが構文エラーなくインポートできる: `python -c "from src.scraper import BakinScraper"`
+- [x] 設定ファイルが正しく読み込める: `python -c "from src.scraper import BakinScraper; s = BakinScraper(); print(s.base_url)"`
+- [x] annotated.htmlが取得できる: `python -c "from src.scraper import BakinScraper; s = BakinScraper(); soup = s.fetch_annotated_page(); print(soup.title.text if soup else 'Failed')"`
 
 #### 手動検証:
 - [ ] ネットワークエラー時に適切にリトライが行われる
