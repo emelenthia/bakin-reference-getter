@@ -237,9 +237,9 @@ python main.py list-classes
 ### 成功基準
 
 #### 自動検証:
-- [ ] プロジェクト構造が作成されている: `ls -la src/ output/`
-- [ ] requirements.txtが存在し、正しい形式である: `cat requirements.txt`
-- [ ] config.yamlが存在し、YAMLとして有効である: `python -c "import yaml; yaml.safe_load(open('config.yaml'))"`
+- [x] プロジェクト構造が作成されている: `ls -la src/ output/`
+- [x] requirements.txtが存在し、正しい形式である: `cat requirements.txt`
+- [x] config.yamlが存在し、YAMLとして有効である: `python -c "import yaml; yaml.safe_load(open('config.yaml'))"`
 
 #### 手動検証:
 - [ ] ディレクトリ構造が計画通りに作成されている

@@ -1,0 +1,33 @@
+# RPG Developer Bakin ドキュメントスクレイパー設定
+
+# ベースURL
+base_url: "https://rpgbakin.com/csreference/doc/ja"
+
+# スクレイピング設定
+scraping:
+  # リクエスト間のディレイ（秒）
+  delay: 1.0
+  # タイムアウト（秒）
+  timeout: 30
+  # リトライ回数
+  max_retries: 3
+  # User-Agent
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+
+# 出力設定
+output:
+  # 出力ディレクトリ
+  base_dir: "./output"
+  classes_dir: "./output/classes"
+  namespaces_dir: "./output/namespaces"
+  # クラスリストキャッシュ
+  class_list_cache: "./output/class_list.json"
+  # 進捗管理CSV
+  progress_file: "./output/progress.csv"
+
+# ページ設定
+pages:
+  # クラス一覧ページ
+  annotated: "annotated.html"
+  # 名前空間一覧ページ
+  namespaces: "namespaces.html"
