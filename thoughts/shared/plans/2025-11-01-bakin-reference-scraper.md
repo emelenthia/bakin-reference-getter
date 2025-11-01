@@ -725,8 +725,8 @@ class BakinParser:
 ### 成功基準
 
 #### 自動検証:
-- [ ] パーサーモジュールがインポートできる: `python -c "from src.parser import BakinParser, ClassInfo"`
-- [ ] annotated.htmlからクラスリストが抽出できる:
+- [x] パーサーモジュールがインポートできる: `python -c "from src.parser import BakinParser, ClassInfo"`
+- [x] annotated.htmlからクラスリストが抽出できる:
 ```python
 from src.scraper import BakinScraper
 from src.parser import BakinParser

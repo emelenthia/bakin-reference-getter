@@ -23,6 +23,9 @@ ENV/
 # 出力ファイル（プロジェクト固有）
 output/
 
+# HTMLキャッシュ
+html/
+
 # OSファイル
 .DS_Store
 Thumbs.db
