@@ -3,7 +3,7 @@
 このドキュメントは、RPG Developer BakinのC#リファレンスドキュメントの実際のHTML構造を記録したものです。
 パーサー実装時（フェーズ3）にこの情報を参照してください。
 
-**作成日**: 2025-01-08
+**作成日**: 2025-11-01
 **対象URL**: https://rpgbakin.com/csreference/doc/ja/
 
 ---
@@ -394,4 +394,4 @@ if not methods:
 ---
 
 **更新履歴**:
-- 2025-01-08: 初版作成（annotated.htmlとCastクラスページを調査）
+- 2025-11-01: 初版作成（annotated.htmlとCastクラスページを調査）

@@ -1851,7 +1851,7 @@ python main.py list-classes
 
 ```csv
 full_name,name,url,type,namespace,description,completed,last_updated
-Yukar.Common.Rom.Cast,Cast,class_yukar_1_1_common_1_1_rom_1_1_cast.html,class,Yukar.Common.Rom,キャラクタ定義,True,2025-01-08T10:30:45
+Yukar.Common.Rom.Cast,Cast,class_yukar_1_1_common_1_1_rom_1_1_cast.html,class,Yukar.Common.Rom,キャラクタ定義,True,2025-11-01T10:30:45
 Yukar.Common.Rom.Monster,Monster,class_yukar_1_1_common_1_1_rom_1_1_monster.html,class,Yukar.Common.Rom,モンスター定義,False,
 ```
 
