@@ -167,6 +167,31 @@ class BakinDocumentationScraper:
         self.generator.save_markdown(index_md, index_path)
         logger.info(f"Index file generated: {index_path}")
 
+    def scrape_by_name(self, class_name: str):
+        """
+        特定のクラス名でスクレイピング
+
+        Args:
+            class_name: クラスの完全修飾名
+        """
+        # クラスリストから検索
+        classes = self.fetch_class_list()
+
+        target = None
+        for cls in classes:
+            if cls.full_name == class_name or cls.name == class_name:
+                target = cls
+                break
+
+        if not target:
+            logger.error(f"Class not found: {class_name}")
+            return
+
+        logger.info(f"Scraping {target.full_name}...")
+        detail = self.scrape_class(target)
+        self.save_class_markdown(detail)
+        logger.info(f"Saved to {self.classes_dir / (target.full_name + '.md')}")
+
 
 @click.group()
 def cli():
@@ -207,6 +232,36 @@ def status():
         filled = int(bar_length * stats['completed'] / stats['total'])
         bar = '#' * filled + '-' * (bar_length - filled)
         click.echo(f"[{bar}] {stats['completed']}/{stats['total']}")
+
+
+@cli.command()
+@click.argument('class_name')
+def scrape_class(class_name):
+    """特定のクラスのみスクレイピング"""
+    scraper = BakinDocumentationScraper()
+    scraper.scrape_by_name(class_name)
+
+
+@cli.command()
+@click.option('--force', is_flag=True, help='キャッシュを無視して再取得')
+def list_classes(force):
+    """クラスリストを表示"""
+    scraper = BakinDocumentationScraper()
+    classes = scraper.fetch_class_list(force=force)
+
+    # 名前空間ごとにグループ化
+    namespaces = {}
+    for cls in classes:
+        ns = cls.namespace or "Global"
+        if ns not in namespaces:
+            namespaces[ns] = []
+        namespaces[ns].append(cls)
+
+    # 表示
+    for ns in sorted(namespaces.keys()):
+        click.echo(f"\n{ns}:")
+        for cls in sorted(namespaces[ns], key=lambda x: x.name):
+            click.echo(f"  - {cls.name} ({cls.type})")
 
 
 if __name__ == '__main__':
