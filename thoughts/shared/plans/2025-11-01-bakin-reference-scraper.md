@@ -1359,15 +1359,15 @@ def status():
 ### 成功基準
 
 #### 自動検証:
-- [ ] scrapeコマンドが動作する: `python main.py scrape --limit 1`
-- [ ] statusコマンドが動作する: `python main.py status`
-- [ ] 進捗が正しく保存される
+- [x] scrapeコマンドが動作する: `python main.py scrape --limit 1`
+- [x] statusコマンドが動作する: `python main.py status`
+- [x] 進捗が正しく保存される
 
 #### 手動検証:
-- [ ] `--limit 5`で5件だけ処理できる
-- [ ] 2回目の実行で続きから処理される
-- [ ] Ctrl+Cで中断しても進捗が保存される
-- [ ] 全件完了後に索引ファイルが生成される
+- [x] `--limit 5`で5件だけ処理できる
+- [x] 2回目の実行で続きから処理される
+- [x] Ctrl+Cで中断しても進捗が保存される
+- [x] 全件完了後に索引ファイルが生成される
 
 ---
 
