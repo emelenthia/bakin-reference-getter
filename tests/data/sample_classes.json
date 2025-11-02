@@ -1,0 +1,42 @@
+[
+  {
+    "name": "GameEngine",
+    "full_name": "FakeEngine.Core.GameEngine",
+    "url": "class_fake_engine_1_1_core_1_1_game_engine.html",
+    "type": "class",
+    "namespace": "FakeEngine.Core",
+    "description": "ゲームエンジンのコアクラス"
+  },
+  {
+    "name": "Renderer",
+    "full_name": "FakeEngine.Graphics.Renderer",
+    "url": "class_fake_engine_1_1_graphics_1_1_renderer.html",
+    "type": "class",
+    "namespace": "FakeEngine.Graphics",
+    "description": "描画処理を担当するクラス"
+  },
+  {
+    "name": "AudioPlayer",
+    "full_name": "FakeEngine.Audio.AudioPlayer",
+    "url": "class_fake_engine_1_1_audio_1_1_audio_player.html",
+    "type": "class",
+    "namespace": "FakeEngine.Audio",
+    "description": ""
+  },
+  {
+    "name": "InputManager",
+    "full_name": "FakeEngine.Input.InputManager",
+    "url": "class_fake_engine_1_1_input_1_1_input_manager.html",
+    "type": "class",
+    "namespace": "FakeEngine.Input",
+    "description": ""
+  },
+  {
+    "name": "Character",
+    "full_name": "FakeGame.Data.Character",
+    "url": "class_fake_game_1_1_data_1_1_character.html",
+    "type": "class",
+    "namespace": "FakeGame.Data",
+    "description": "キャラクター情報"
+  }
+]
