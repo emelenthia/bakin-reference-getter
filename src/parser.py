@@ -8,6 +8,11 @@ from dataclasses import dataclass
 
 from bs4 import BeautifulSoup, Tag
 
+try:
+    from src.signature_parser import SignatureParser
+except ModuleNotFoundError:
+    from signature_parser import SignatureParser
+
 logger = logging.getLogger(__name__)
 
 
@@ -212,55 +217,80 @@ class BakinParser:
         methods = []
 
         # Doxygenのメソッドセクションを探す
-        # 通常は <h2>Public メンバ関数</h2> などのセクション
-        method_section = soup.find('h2', string=re.compile('メンバ関数|Member Functions'))
-        if not method_section:
-            return methods
+        # id="pub-methods"（公開メンバ関数）と id="pub-static-methods"（静的公開メンバ関数）
+        for section_id in ['pub-methods', 'pub-static-methods']:
+            section_anchor = soup.find('a', {'id': section_id})
+            if not section_anchor:
+                continue
 
-        # メソッドテーブルを探す
-        table = method_section.find_next('table', class_='memberdecls')
-        if not table:
-            return methods
+            # セクションヘッダーの親要素（<h2>）を取得
+            section_heading = section_anchor.find_parent('h2')
+            if not section_heading:
+                continue
 
-        for row in table.find_all('tr', class_='memitem'):
-            method = self._parse_method_row(row, soup)
-            if method:
-                methods.append(method)
+            # <h2>の親の<table>を取得（<h2>は<table>の中にある）
+            table = section_heading.find_parent('table', class_='memberdecls')
+            if not table:
+                continue
+
+            # 静的メソッドかどうかのフラグ
+            is_static = (section_id == 'pub-static-methods')
+
+            for row in table.find_all('tr', class_=re.compile(r'^memitem:')):
+                method = self._parse_method_row(row, soup, is_static)
+                if method:
+                    methods.append(method)
 
         return methods
 
-    def _parse_method_row(self, row: Tag, soup: BeautifulSoup) -> Optional[Dict]:
+    def _parse_method_row(self, row: Tag, soup: BeautifulSoup, is_static: bool = False) -> Optional[Dict]:
         """メソッド行をパース"""
         method = {}
-
-        # メソッド名
-        name_cell = row.find('td', class_='memItemRight')
-        if not name_cell:
-            return None
-
-        method_link = name_cell.find('a')
-        if method_link:
-            method['name'] = method_link.get_text(strip=True)
-            method['anchor'] = method_link.get('href', '')
 
         # 戻り値の型
         return_type_cell = row.find('td', class_='memItemLeft')
         if return_type_cell:
-            method['return_type'] = return_type_cell.get_text(strip=True)
+            return_type = return_type_cell.get_text(strip=True)
+            # 静的メソッドの場合、HTMLには既に'static'が含まれているので削除
+            if is_static and return_type.startswith('static'):
+                # 'static'とその後のスペースを削除（スペースが無い場合もあるので両方対応）
+                return_type = return_type[6:].strip()  # 'static' は6文字
+            method['return_type'] = return_type
+
+        # メソッドシグネチャ
+        name_cell = row.find('td', class_='memItemRight')
+        if not name_cell:
+            return None
+
+        # メソッド全体のシグネチャを取得（タグ間にスペースを入れる）
+        raw_signature = name_cell.get_text(separator=' ', strip=True)
+        # 余分なスペースを削除
+        raw_signature = ' '.join(raw_signature.split())
+        method['signature'] = SignatureParser.format_signature(raw_signature)
+
+        # メソッド名を抽出（リンク部分）
+        method_link = name_cell.find('a', class_='el')
+        if method_link:
+            method['name'] = method_link.get_text(strip=True)
+            # アンカーIDを取得（詳細説明へのリンク用）
+            href = method_link.get('href', '')
+            if href and '#' in href:
+                method['anchor_id'] = href.split('#')[1]
+
+        # 静的メソッドかどうか
+        method['is_static'] = is_static
 
         # 詳細説明（アンカーから辿る）
-        if 'anchor' in method:
-            detail_section = soup.find('a', {'id': method['anchor'].replace('#', '')})
+        if 'anchor_id' in method:
+            detail_section = soup.find('a', {'id': method['anchor_id']})
             if detail_section:
                 # 詳細説明を探す
-                desc_div = detail_section.find_next('div', class_='memitemdoc')
+                desc_div = detail_section.find_next('div', class_='memdoc')
                 if desc_div:
-                    method['description'] = desc_div.get_text(strip=True)
-
-        # 継承元の確認（行に「継承」や「inherited」が含まれるか）
-        inherited_from = row.find('td', class_='inherit')
-        if inherited_from:
-            method['inherited_from'] = inherited_from.get_text(strip=True)
+                    # テキストブロックを抽出
+                    textblocks = desc_div.find_all('p')
+                    if textblocks:
+                        method['description'] = ' '.join(p.get_text(strip=True) for p in textblocks)
 
         return method
 
@@ -269,46 +299,76 @@ class BakinParser:
         properties = []
 
         # Doxygenではプロパティは「プロパティ」セクションにある
-        prop_section = soup.find('h2', string=re.compile('プロパティ|Properties'))
-        if not prop_section:
-            return properties
+        # id="properties" または "pub-properties" などを探す
+        for section_id in ['properties', 'pub-properties', 'pub-static-properties']:
+            section_anchor = soup.find('a', {'id': section_id})
+            if not section_anchor:
+                continue
 
-        table = prop_section.find_next('table', class_='memberdecls')
-        if not table:
-            return properties
+            # セクションヘッダーの親要素（<h2>）を取得
+            section_heading = section_anchor.find_parent('h2')
+            if not section_heading:
+                continue
 
-        for row in table.find_all('tr', class_='memitem'):
-            prop = self._parse_property_row(row)
-            if prop:
-                properties.append(prop)
+            # <h2>の親の<table>を取得（<h2>は<table>の中にある）
+            table = section_heading.find_parent('table', class_='memberdecls')
+            if not table:
+                continue
+
+            is_static = ('static' in section_id)
+
+            for row in table.find_all('tr', class_=re.compile(r'^memitem:')):
+                prop = self._parse_property_row(row, is_static)
+                if prop:
+                    properties.append(prop)
 
         return properties
 
-    def _parse_property_row(self, row: Tag) -> Optional[Dict]:
+    def _parse_property_row(self, row: Tag, is_static: bool = False) -> Optional[Dict]:
         """プロパティ行をパース"""
         prop = {}
+
+        # 型
+        type_cell = row.find('td', class_='memItemLeft')
+        if type_cell:
+            prop_type = type_cell.get_text(strip=True)
+            # 静的プロパティの場合、HTMLには既に'static'が含まれているので削除
+            if is_static and prop_type.startswith('static'):
+                prop_type = prop_type[6:].strip()  # 'static' は6文字
+            prop['type'] = prop_type
 
         # プロパティ名
         name_cell = row.find('td', class_='memItemRight')
         if not name_cell:
             return None
 
-        prop_text = name_cell.get_text(strip=True)
-        prop['name'] = prop_text
+        # プロパティ宣言を取得（タグ間にスペースを入れる）
+        prop_text = name_cell.get_text(separator=' ', strip=True)
+        # 余分なスペースを削除
+        prop_text = ' '.join(prop_text.split())
+        prop['declaration'] = prop_text
 
-        # 型
-        type_cell = row.find('td', class_='memItemLeft')
-        if type_cell:
-            prop['type'] = type_cell.get_text(strip=True)
+        # プロパティ名を抽出（リンク部分）
+        prop_link = name_cell.find('a', class_='el')
+        if prop_link:
+            prop['name'] = prop_link.get_text(strip=True)
+        else:
+            # リンクがない場合は全体のテキストから抽出
+            # [get, set]などのアクセサが含まれる場合はそれを除外
+            if '[' in prop_text:
+                prop['name'] = prop_text[:prop_text.find('[')].strip()
+            else:
+                prop['name'] = prop_text
+
+        # 静的プロパティかどうか
+        prop['is_static'] = is_static
 
         # get/setの確認
         if '[get' in prop_text or '[set' in prop_text:
-            prop['accessors'] = prop_text[prop_text.find('['):prop_text.find(']')+1]
-
-        # 継承元
-        inherited_from = row.find('td', class_='inherit')
-        if inherited_from:
-            prop['inherited_from'] = inherited_from.get_text(strip=True)
+            start = prop_text.find('[')
+            end = prop_text.find(']', start) + 1
+            if end > start:
+                prop['accessors'] = prop_text[start:end]
 
         return prop
 
@@ -316,16 +376,22 @@ class BakinParser:
         """フィールド（公開変数）を抽出"""
         fields = []
 
-        # 公開変数セクションを探す
-        field_section = soup.find('h2', string=re.compile('公開変数|Public Attributes'))
-        if not field_section:
+        # 公開変数セクションを探す（id="pub-attribs"）
+        section_anchor = soup.find('a', {'id': 'pub-attribs'})
+        if not section_anchor:
             return fields
 
-        table = field_section.find_next('table', class_='memberdecls')
+        # セクションヘッダーの親要素（<h2>）を取得
+        section_heading = section_anchor.find_parent('h2')
+        if not section_heading:
+            return fields
+
+        # <h2>の親の<table>を取得（<h2>は<table>の中にある）
+        table = section_heading.find_parent('table', class_='memberdecls')
         if not table:
             return fields
 
-        for row in table.find_all('tr', class_='memitem'):
+        for row in table.find_all('tr', class_=re.compile(r'^memitem:')):
             field = self._parse_field_row(row)
             if field:
                 fields.append(field)
@@ -336,21 +402,32 @@ class BakinParser:
         """フィールド行をパース"""
         field = {}
 
-        # フィールド名
-        name_cell = row.find('td', class_='memItemRight')
-        if not name_cell:
-            return None
-
-        field['name'] = name_cell.get_text(strip=True)
-
         # 型
         type_cell = row.find('td', class_='memItemLeft')
         if type_cell:
             field['type'] = type_cell.get_text(strip=True)
 
-        # 継承元
-        inherited_from = row.find('td', class_='inherit')
-        if inherited_from:
-            field['inherited_from'] = inherited_from.get_text(strip=True)
+        # フィールド名と初期値
+        name_cell = row.find('td', class_='memItemRight')
+        if not name_cell:
+            return None
+
+        # フィールド全体の宣言を保存（タグ間にスペースを入れる）
+        declaration = name_cell.get_text(separator=' ', strip=True)
+        # 余分なスペースを削除
+        field['declaration'] = ' '.join(declaration.split())
+
+        # フィールド名を抽出（リンク部分）
+        field_link = name_cell.find('a', class_='el')
+        if field_link:
+            field['name'] = field_link.get_text(strip=True)
+        else:
+            # リンクがない場合は全体のテキストから抽出
+            # 初期値がある場合は = の前まで
+            full_text = name_cell.get_text(strip=True)
+            if '=' in full_text:
+                field['name'] = full_text.split('=')[0].strip()
+            else:
+                field['name'] = full_text
 
         return field

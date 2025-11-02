@@ -12,6 +12,7 @@ from tqdm import tqdm
 from src.scraper import BakinScraper
 from src.parser import BakinParser, ClassInfo, ClassDetail
 from src.markdown_generator import MarkdownGenerator
+from src.json_generator import JsonGenerator
 from src.progress_manager import ProgressManager
 
 logger = logging.getLogger(__name__)
@@ -24,12 +25,14 @@ class BakinDocumentationScraper:
         self.scraper = BakinScraper(config_path)
         self.parser = BakinParser()
         self.generator = MarkdownGenerator()
+        self.json_generator = JsonGenerator()
         self.config = self.scraper.config
 
         # 出力ディレクトリ
         self.output_dir = Path(self.config['output']['base_dir'])
         self.classes_dir = Path(self.config['output']['classes_dir'])
         self.namespaces_dir = Path(self.config['output']['namespaces_dir'])
+        self.json_dir = Path(self.config['output']['json_dir'])
         self.cache_file = Path(self.config['output']['class_list_cache'])
 
         # 進捗管理
@@ -40,6 +43,7 @@ class BakinDocumentationScraper:
         self.output_dir.mkdir(exist_ok=True)
         self.classes_dir.mkdir(exist_ok=True)
         self.namespaces_dir.mkdir(exist_ok=True)
+        self.json_dir.mkdir(exist_ok=True)
 
     def fetch_class_list(self, force: bool = False) -> List[ClassInfo]:
         """
@@ -89,16 +93,21 @@ class BakinDocumentationScraper:
 
     def save_class_markdown(self, detail: ClassDetail):
         """
-        クラス情報をMarkdownとして保存
+        クラス情報をMarkdownとJSONとして保存
 
         Args:
             detail: ClassDetail
         """
+        # Markdown保存
         md_content = self.generator.generate_class_markdown(detail)
-        filename = f"{detail.info.full_name}.md"
-        filepath = self.classes_dir / filename
+        md_filename = f"{detail.info.full_name}.md"
+        md_filepath = self.classes_dir / md_filename
+        self.generator.save_markdown(md_content, md_filepath)
 
-        self.generator.save_markdown(md_content, filepath)
+        # JSON保存
+        json_filename = f"{detail.info.full_name}.json"
+        json_filepath = self.json_dir / json_filename
+        self.json_generator.save_class_json(detail, json_filepath)
 
     def scrape_with_progress(self, limit: Optional[int] = None, force_init: bool = False):
         """
@@ -201,11 +210,29 @@ def cli():
 
 @cli.command()
 @click.option('--limit', type=int, default=None, help='処理する最大件数（未指定の場合は全て）')
-@click.option('--reset', is_flag=True, help='進捗をリセットして最初から')
-def scrape(limit, reset):
+def scrape(limit):
     """継続モードでスクレイピング（推奨）"""
     scraper = BakinDocumentationScraper()
-    scraper.scrape_with_progress(limit=limit, force_init=reset)
+    scraper.scrape_with_progress(limit=limit, force_init=False)
+
+
+@cli.command('reset-progress')
+def reset_progress():
+    """進捗状況をリセット"""
+    scraper = BakinDocumentationScraper()
+
+    if not scraper.progress_file.exists():
+        click.echo("進捗ファイルが存在しません。新規作成します...")
+    else:
+        click.echo(f"進捗ファイルをリセットします: {scraper.progress_file}")
+
+    # クラスリストを取得して進捗ファイルを初期化
+    classes = scraper.fetch_class_list()
+    scraper.progress_manager.initialize_from_class_list(classes)
+
+    stats = scraper.progress_manager.get_statistics()
+    click.echo(f"\n進捗をリセットしました: {stats['total']} クラス")
+    click.echo("スクレイピングを開始するには 'python main.py scrape' を実行してください")
 
 
 @cli.command()

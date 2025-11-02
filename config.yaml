@@ -20,6 +20,7 @@ output:
   base_dir: "./output"
   classes_dir: "./output/classes"
   namespaces_dir: "./output/namespaces"
+  json_dir: "./output/json"
   # クラスリストキャッシュ
   class_list_cache: "./output/class_list.json"
   # 進捗管理CSV
