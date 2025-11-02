@@ -982,8 +982,8 @@ class MarkdownGenerator:
 ### 成功基準
 
 #### 自動検証:
-- [ ] Markdown生成モジュールがインポートできる: `python -c "from src.markdown_generator import MarkdownGenerator"`
-- [ ] サンプルのClassDetailからMarkdownが生成できる:
+- [x] Markdown生成モジュールがインポートできる: `python -c "from src.markdown_generator import MarkdownGenerator"`
+- [x] サンプルのClassDetailからMarkdownが生成できる:
 ```python
 from src.parser import ClassInfo, ClassDetail
 from src.markdown_generator import MarkdownGenerator
@@ -1004,9 +1004,9 @@ assert "# Yukar.Common.Rom.Cast" in md
 ```
 
 #### 手動検証:
-- [ ] 生成されたMarkdownが読みやすい
-- [ ] 継承情報が正しく表示される
-- [ ] セクションが適切に分かれている
+- [x] 生成されたMarkdownが読みやすい
+- [x] 継承情報が正しく表示される
+- [x] セクションが適切に分かれている
 
 ---
 

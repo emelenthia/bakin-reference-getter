@@ -124,19 +124,3 @@ class BakinScraper:
             class_url: クラスページのURL（例: "class_yukar_1_1_common_1_1_rom_1_1_cast.html"）
         """
         return self.fetch_page(class_url)
-
-
-if __name__ == '__main__':
-    # テスト実行
-    print("Testing BakinScraper...")
-    scraper = BakinScraper()
-
-    print(f"Base URL: {scraper.base_url}")
-
-    print("Fetching annotated page...")
-    soup = scraper.fetch_annotated_page()
-
-    if soup and soup.title:
-        print("OK: Scraper test passed!")
-    else:
-        print("FAIL: Failed to fetch page")
