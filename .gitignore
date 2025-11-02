@@ -25,6 +25,7 @@ output/
 
 # HTMLキャッシュ
 html/
+tests/data/annotated.html
 
 # OSファイル
 .DS_Store

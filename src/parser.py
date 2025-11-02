@@ -354,22 +354,3 @@ class BakinParser:
             field['inherited_from'] = inherited_from.get_text(strip=True)
 
         return field
-
-
-if __name__ == '__main__':
-    # テスト実行
-    from scraper import BakinScraper
-
-    print("Testing BakinParser...")
-    scraper = BakinScraper()
-    parser = BakinParser()
-
-    print("Fetching annotated page...")
-    soup = scraper.fetch_annotated_page()
-
-    print("Parsing classes...")
-    classes = parser.parse_annotated_page(soup)
-
-    print(f"OK: Found {len(classes)} classes")
-    print(f"Sample: {classes[0].full_name} (namespace: {classes[0].namespace})")
-    print("Parser test passed!")
