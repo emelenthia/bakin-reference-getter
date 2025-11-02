@@ -64,76 +64,124 @@ class MarkdownGenerator:
             lines.append("## プロパティ")
             lines.append("")
 
-            # 継承プロパティと独自プロパティを分離
-            own_props = [p for p in detail.properties if 'inherited_from' not in p]
-            inherited_props = [p for p in detail.properties if 'inherited_from' in p]
+            # 静的/非静的プロパティを分離
+            static_props = [p for p in detail.properties if p.get('is_static', False)]
+            instance_props = [p for p in detail.properties if not p.get('is_static', False)]
 
-            if own_props:
-                for prop in own_props:
+            if instance_props:
+                for prop in instance_props:
                     lines.append(f"### {prop['name']}")
                     lines.append("")
-                    lines.append(f"- **型**: `{prop.get('type', 'unknown')}`")
-                    if 'accessors' in prop:
-                        lines.append(f"- **アクセサ**: {prop['accessors']}")
+                    if 'declaration' in prop:
+                        lines.append(f"```csharp")
+                        lines.append(f"{prop.get('type', '')} {prop['declaration']}")
+                        lines.append(f"```")
+                        lines.append("")
+                    else:
+                        lines.append(f"- **型**: `{prop.get('type', 'unknown')}`")
+                        if 'accessors' in prop:
+                            lines.append(f"- **アクセサ**: {prop['accessors']}")
                     if 'description' in prop:
                         lines.append(f"- **説明**: {prop['description']}")
                     lines.append("")
 
-            if inherited_props:
-                lines.append("### 継承されたプロパティ")
+            if static_props:
+                lines.append("### 静的プロパティ")
                 lines.append("")
-                for prop in inherited_props:
-                    lines.append(f"- `{prop['name']}` (継承元: `{prop['inherited_from']}`)")
-                lines.append("")
+                for prop in static_props:
+                    lines.append(f"#### {prop['name']}")
+                    lines.append("")
+                    if 'declaration' in prop:
+                        lines.append(f"```csharp")
+                        prop_type = prop.get('type', '')
+                        # 型に既に'static'が含まれているかチェック
+                        if prop_type.startswith('static '):
+                            lines.append(f"{prop_type} {prop['declaration']}")
+                        else:
+                            lines.append(f"static {prop_type} {prop['declaration']}")
+                        lines.append(f"```")
+                        lines.append("")
+                    else:
+                        lines.append(f"- **型**: `{prop.get('type', 'unknown')}`")
+                    lines.append("")
 
         # メソッド
         if detail.methods:
             lines.append("## メソッド")
             lines.append("")
 
-            # 継承メソッドと独自メソッドを分離
-            own_methods = [m for m in detail.methods if 'inherited_from' not in m]
-            inherited_methods = [m for m in detail.methods if 'inherited_from' in m]
+            # 静的/非静的メソッドを分離
+            static_methods = [m for m in detail.methods if m.get('is_static', False)]
+            instance_methods = [m for m in detail.methods if not m.get('is_static', False)]
 
-            if own_methods:
-                for method in own_methods:
-                    lines.append(f"### {method['name']}")
+            if instance_methods:
+                for method in instance_methods:
+                    lines.append(f"### {method.get('name', 'unknown')}")
                     lines.append("")
-                    if 'return_type' in method:
+
+                    # シグネチャ全体を表示
+                    if 'signature' in method:
+                        lines.append("```csharp")
+                        sig = method['signature']
+                        if 'return_type' in method:
+                            lines.append(f"{method['return_type']} {sig}")
+                        else:
+                            lines.append(sig)
+                        lines.append("```")
+                        lines.append("")
+                    elif 'return_type' in method:
                         lines.append(f"**戻り値**: `{method['return_type']}`")
                         lines.append("")
+
                     if 'description' in method:
                         lines.append(method['description'])
                         lines.append("")
+
                     lines.append("---")
                     lines.append("")
 
-            if inherited_methods:
-                lines.append("### 継承されたメソッド")
+            if static_methods:
+                lines.append("### 静的メソッド")
                 lines.append("")
-                for method in inherited_methods:
-                    lines.append(f"- `{method['name']}` (継承元: `{method['inherited_from']}`)")
-                lines.append("")
+                for method in static_methods:
+                    lines.append(f"#### {method.get('name', 'unknown')}")
+                    lines.append("")
+
+                    # シグネチャ全体を表示
+                    if 'signature' in method:
+                        lines.append("```csharp")
+                        sig = method['signature']
+                        ret_type = method.get('return_type', '')
+                        # 戻り値の型に既に'static'が含まれているかチェック
+                        if ret_type.startswith('static '):
+                            # 既にstaticが含まれている場合はそのまま使用
+                            lines.append(f"{ret_type} {sig}")
+                        else:
+                            # staticを追加
+                            lines.append(f"static {ret_type} {sig}")
+                        lines.append("```")
+                        lines.append("")
+
+                    if 'description' in method:
+                        lines.append(method['description'])
+                        lines.append("")
+
+                    lines.append("---")
+                    lines.append("")
 
         # フィールド
         if detail.fields:
             lines.append("## 公開フィールド")
             lines.append("")
 
-            own_fields = [f for f in detail.fields if 'inherited_from' not in f]
-            inherited_fields = [f for f in detail.fields if 'inherited_from' in f]
-
-            if own_fields:
-                for field in own_fields:
+            for field in detail.fields:
+                if 'declaration' in field:
+                    # フィールドの完全な宣言を表示
+                    lines.append(f"- `{field.get('type', '')} {field['declaration']}`")
+                else:
                     lines.append(f"- `{field.get('type', 'unknown')} {field['name']}`")
-                lines.append("")
 
-            if inherited_fields:
-                lines.append("### 継承されたフィールド")
-                lines.append("")
-                for field in inherited_fields:
-                    lines.append(f"- `{field['name']}` (継承元: `{field['inherited_from']}`)")
-                lines.append("")
+            lines.append("")
 
         return "\n".join(lines)
 

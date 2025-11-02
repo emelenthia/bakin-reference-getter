@@ -20,8 +20,8 @@ pytest tests/ -v
 
 ### 継続モードで少しずつスクレイピング（推奨）
 ```bash
-# 最初の10件を取得
-python main.py scrape --limit 10
+# 最初の5件を取得（動作確認）
+python main.py scrape --limit 5
 
 # さらに10件を取得（続きから）
 python main.py scrape --limit 10
@@ -30,14 +30,19 @@ python main.py scrape --limit 10
 python main.py scrape
 ```
 
-### 全クラスを一括取得
+### 進捗のリセット
 ```bash
-python main.py scrape-all
+# 進捗をリセット
+python main.py reset-progress
+
+# リセット後、最初からスクレイピング
+python main.py reset-progress
+python main.py scrape --limit 5
 ```
 
 ### 特定のクラスのみ取得
 ```bash
-python main.py scrape-class "Yukar.Common.Rom.Cast"
+python main.py scrape-class "SharpKmyAudio.Sound"
 ```
 
 ### 進捗状況の確認
@@ -53,7 +58,7 @@ python main.py list-classes
 ## 出力形式
 
 - `output/classes/`: 各クラスのMarkdownファイル
-- `output/namespaces/`: 名前空間ごとのまとめ
+- `output/json/`: 各クラスのJSONファイル（AI処理用）
 - `output/index.md`: 全体の索引
 
 ## 設定
