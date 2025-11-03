@@ -145,8 +145,8 @@ class ProgressManager:
             統計情報の辞書
         """
         entries = self.load_progress()
-        completed_count = sum(1 for e in entries if e.completed)
         total_count = len(entries)
+        completed_count = sum(1 for e in entries if e.completed)
         pending_count = total_count - completed_count
 
         return {
